@@ -80,7 +80,7 @@ sudo system enable ssh
 
 Primero instalaremos los servicios más criticos y necesarios, ademas de algunos que provee ubuntu, luego iremos con los referentes a los usuarios y necesidades
 
-> [|Important]
+> [!Important]
 > No todos son necesarios
 
 | Servicio | Uso | En Sistema/Contenedor | Descripción |
