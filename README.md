@@ -91,12 +91,12 @@ Primero instalaremos los servicios más criticos y necesarios, ademas de algunos
 | **Webmin** | *Monitoreo y Otros* | Sistema |  Interfaz gráfica basada en web para la administración de sistemas Linux y Unix, diseñada para gestionar el servidor desde el navegador sin necesidad de editar archivos de configuración manualmente en la terminal. |
 | **Docker** | *Contenerizado* | Sistema | Plataforma líder de contenerización que permite empaquetar una aplicación y todas sus dependencias (bibliotecas, código, configuración) en una unidad estandarizada llamada contenedor. |
 | **Portainer** | *Monitor de Contenedores* | Contenedor | Interfaz gráfica de usuario diseñada para simplificar la gestión de contenedores. |
-| **Pihole** | *DNS y filtrado* | Contenedor | Aplicación que funciona como un [*sumidero de DNS*](#--sumidero-de-dns) diseñado para proteger tu red frente a contenido no deseado sin necesidad de instalar software en cada cliente. |
+| **Pihole** | *DNS y filtrado* | Contenedor | Aplicación que funciona como un [*sumidero de DNS*](#-sumidero-de-dns) diseñado para proteger tu red frente a contenido no deseado sin necesidad de instalar software en cada cliente. |
 | **Nextcloud** | *Cloud y otros* | Contenedor | Plataforma de colaboración de código abierto diseñada para crear tu propia nube privada autoalojada, ofreciendo una alternativa segura a servicios como Google Drive o Dropbox. |
 | **Odoo** | *ERP/CRM* | Contenedor | Plataforma de gestión empresarial "todo en uno" de código abierto, diseñada para centralizar todas las operaciones de un negocio en una sola herramienta modular. |
 | WIP | WIP | WIP | ***W***ork ***I***n ***P***rogress |
 
 > [!Note]
-> #### - Sumidero de DNS 
+> #### Sumidero de DNS 
 >   Técnica de seguridad que intercepta consultas DNS de dominios maliciosos o no deseados, devolviendo una IP falsa (generalmente local o "agujero negro") para impedir que los equipos se conecten a sitios dañinos. Funciona como una defensa activa, bloqueando conexiones a botnets o bloqueando publicidad a nivel de red. 
 
