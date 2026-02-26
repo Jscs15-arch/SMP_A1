@@ -4,7 +4,7 @@
 ## 1. Especificaciones utilizadas para el servidor
 
 > [!Note]
-> No se precisa que sean las mismas
+> No es necesario que sean las mismas.
 
 | Especificación | Valor |
 |----------------|-------|
@@ -21,7 +21,7 @@ Para esto tenemos 2 opciones:
 
 #### 2.1.1. Utilizar el servidor DHCP del router
 
-Con esto solo debemos asegurar de saber cual es el puerto de conexión utilizado y dejar que DHCP configure la interfaz.
+Con esto, solo debemos asegurarnos de saber cuál es el puerto de conexión utilizado y dejar que DHCP configure la interfaz.
 
 #### 2.1.2. Configuración manual
 
@@ -36,7 +36,7 @@ Al configurar manualmente debemos conocer que IP's estan disponibles, cual es la
 | **DNS** | 1.1.1.1, 8.8.8.8 |
 
 > [!Note]
-> Para este ejemplo he usado una IP aleatoria dentro de la red definida, de gateway la común en redes domesticas y de DNS Google y Cloudflare
+> Para este ejemplo, he usado una IP aleatoria dentro de la red definida, como gateway la común en redes domésticas y, de DNS, Google y Cloudflare.
 
 ### 2.2. Almacenamiento
 
@@ -50,7 +50,7 @@ En mi caso lo he personalizado de la siguiente forma:
 
 ### 2.3. Servidor **SSH**
 
-Para **SSH** podemos instalarlo desde la instalación del server en uno de los pasos de instalación o de la siguiente manera por la CLI
+Para **SSH**, podemos instalarlo durante la instalación del servidor en uno de los pasos del asistente o de la siguiente manera a través de la CLI:
 
 ```
 sudo apt update
@@ -69,7 +69,7 @@ ssh.service - OpenBSD Secure Shell server
           TriggeredBy: ● ssh.socket
 ```
 
-Si este servicio sale como desactivado faltaría activarlo y si quieres que siempre este activo al arrancar utilizar enable.
+Si este servicio aparece como desactivado, faltaría activarlo; y si quieres que siempre esté activo al arrancar, utiliza enable.
 
 ```bash
 sudo systemctl start ssh
@@ -78,7 +78,7 @@ sudo system enable ssh
 
 ## 3. Servicios a utilizar
 
-Primero instalaremos los servicios más criticos y necesarios, ademas de algunos que provee ubuntu, luego iremos con los referentes a los usuarios y necesidades
+Primero instalaremos los servicios más críticos y necesarios, además de algunos que provee Ubuntu; luego iremos con los referentes a los usuarios y necesidades.
 
 > [!Important]
 > No todos son necesarios
