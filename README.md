@@ -85,6 +85,7 @@ Primero instalaremos los servicios más criticos y necesarios, ademas de algunos
 
 | Servicio | Uso | En Sistema/Contenedor | Descripción |
 |----------|-----|-----------------------|-------------|
+| **Netbird** | *VPN* | Sistema |  Plataforma de código abierto diseñada para crear redes privadas virtuales seguras y de alto rendimiento basadas en el protocolo WireGuard, Una de sus características son sus Redes Mesh Peer-to-Peer que le permite conectar todos los equipos directamente entre sí |
 | **UFW** | *Firewall* | Sistema | ***U***ncomplicated ***F***ire***W***all es una herramienta de seguridad diseñada para gestionar de forma sencilla el cortafuegos en sistemas Linux. |
 | **Fail2ban** | *IPS* | Sistema | Herramienta de seguridad esencial para servidores Linux que previene ataques de fuerza bruta. |
 | **Apache2** | *Reverse proxy* | Sistema | Como proxy inverso, el servidor deja de ser solo un "despachador" de archivos para convertirse en un intermediario inteligente entre internet y las aplicaciones internas. |
