@@ -135,4 +135,4 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 
 #### 3.2.1 NetBird
 
-NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al panel de control de nuestra VPN.
+NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al [panel de control](https://app.netbird.io/peers) de nuestra VPN.
