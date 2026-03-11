@@ -88,20 +88,21 @@ Para conectarnos a nuestro servidor mediante **SSH** solo debemos tener un clien
 
 - Mediante CLI (Terminal que se desea usar)
 
-´´´´shell
+```shell
 ssh usuario@host_o_ip                   /En caso de puerto predeterminado (22)
 
 ssh -p puerto usuario@host_o_ip         /En caso de puerto personalizado
-´´´
+```
 
-#### 2.3.3 Lim
+#### 2.3.3 Limpieza de Fingerprint SSH
 
-´´´shell
-ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la [firgerprint]() ocupada
-´´´
+```shell
+ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la firgerprint ocupada
+```
 
 > [!Note]
-> Fingerprint SSH: Es un resumen corto (hash) de la clave pública de un servidor. Funciona como un sello de identidad único que permite al cliente verificar que se está conectando al servidor correcto y no a un impostor.
+> ##### - Fingerprint SSH: 
+> Es un resumen corto (hash) de la clave pública de un servidor. Funciona como un sello de identidad único que permite al cliente verificar que se está conectando al servidor correcto y no a un impostor.
 
 ## 3. Servicios
 
