@@ -50,6 +50,8 @@ En mi caso lo he personalizado de la siguiente forma:
 
 ### 2.3. Servidor **SSH**
 
+#### 2.3.1 Instalación de **SSH**
+
 Para **SSH**, podemos instalarlo durante la instalación del servidor en uno de los pasos del asistente o de la siguiente manera a través de la CLI:
 
 ```
@@ -76,7 +78,34 @@ sudo systemctl start ssh
 sudo system enable ssh
 ```
 
-## 3. Servicios a utilizar
+#### 2.3.2 Cliente **SSH**
+Para conectarnos a nuestro servidor mediante **SSH** solo debemos tener un cliente de SSH (Ya sea gráfico o por CLI) donde agregaremos las credenciales necesarias, puerto establecido e IP del servidor (O nombre)
+
+- Mediante cliente GUI ([Terminus](https://termius.com/index.html) en mi caso ya que funciona tanto en móvil como PC):
+
+> [!Note]
+> Se puede usar el cliente deseado, por ejemplo: PuTTY que puede descargase desde su [Web](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) o desde [Microsoft Store](https://apps.microsoft.com/detail/xpfnzksklbp7rj)
+
+- Mediante CLI (Terminal que se desea usar)
+
+´´´´shell
+ssh usuario@host_o_ip                   /En caso de puerto predeterminado (22)
+
+ssh -p puerto usuario@host_o_ip         /En caso de puerto personalizado
+´´´
+
+#### 2.3.3 Lim
+
+´´´shell
+ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la [firgerprint]() ocupada
+´´´
+
+> [!Note]
+> Fingerprint SSH: Es un resumen corto (hash) de la clave pública de un servidor. Funciona como un sello de identidad único que permite al cliente verificar que se está conectando al servidor correcto y no a un impostor.
+
+## 3. Servicios
+
+### 3.1 Servicios a utilizar
 
 Primero instalaremos los servicios más críticos y necesarios, además de algunos que provee Ubuntu; luego iremos con los referentes a los usuarios y necesidades.
 
@@ -101,3 +130,8 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 > #### - Sumidero de DNS 
 >   Técnica de seguridad que intercepta consultas DNS de dominios maliciosos o no deseados, devolviendo una IP falsa (generalmente local o "agujero negro") para impedir que los equipos se conecten a sitios dañinos. Funciona como una defensa activa, bloqueando conexiones a botnets o bloqueando publicidad a nivel de red. 
 
+### 3.2 Instalación de los servicios
+
+#### 3.2.1 Netbird
+
+Netbird puede ser instalado desde su [página oficial](https://netbird.io/) ofreciendonos distintos modos de [instalación](https://app.netbird.io/install) este lo instalaremos para nuestro PC de escritorio que esta conectado mediante **SSH** donde iniciaremos sesión lo instalaremos para nuestro sistema operativo correspondiente y accedemos al panel de control de nuestra VPN Netbird
