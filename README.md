@@ -79,9 +79,9 @@ sudo system enable ssh
 ```
 
 #### 2.3.2 Cliente **SSH**
-Para conectarnos a nuestro servidor mediante **SSH** solo debemos tener un cliente de SSH (Ya sea gráfico o por CLI) donde agregaremos las credenciales necesarias, puerto establecido e IP del servidor (O nombre)
+Para conectarnos a nuestro servidor mediante **SSH**, solo debemos tener un cliente de SSH (ya sea gráfico o por CLI) donde agregaremos las credenciales necesarias, el puerto establecido y la IP del servidor (o nombre).
 
-- Mediante cliente GUI ([Terminus](https://termius.com/index.html) en mi caso ya que funciona tanto en móvil como PC):
+- Mediante cliente GUI ([Terminus](https://termius.com/index.html) en mi caso, ya que funciona tanto en móvil como PC):
 
 > [!Note]
 > Se puede usar el cliente deseado, por ejemplo: PuTTY que puede descargase desde su [Web](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html) o desde [Microsoft Store](https://apps.microsoft.com/detail/xpfnzksklbp7rj)
@@ -115,7 +115,7 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 
 | Servicio | Uso | En Sistema/Contenedor | Descripción |
 |----------|-----|-----------------------|-------------|
-| **Netbird** | *VPN* | Sistema |  Plataforma de código abierto diseñada para crear redes privadas virtuales seguras y de alto rendimiento basadas en el protocolo WireGuard, Una de sus características son sus Redes Mesh Peer-to-Peer que le permite conectar todos los equipos directamente entre sí |
+| **NetBird** | *VPN* | Sistema |  Plataforma de código abierto diseñada para crear redes privadas virtuales seguras y de alto rendimiento basadas en el protocolo WireGuard, Una de sus características son sus Redes Mesh Peer-to-Peer que le permite conectar todos los equipos directamente entre sí |
 | **UFW** | *Firewall* | Sistema | ***U***ncomplicated ***F***ire***W***all es una herramienta de seguridad diseñada para gestionar de forma sencilla el cortafuegos en sistemas Linux. |
 | **Fail2ban** | *IPS* | Sistema | Herramienta de seguridad esencial para servidores Linux que previene ataques de fuerza bruta. |
 | **Apache2** | *Reverse proxy* | Sistema | Como proxy inverso, el servidor deja de ser solo un "despachador" de archivos para convertirse en un intermediario inteligente entre internet y las aplicaciones internas. |
@@ -133,6 +133,6 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 
 ### 3.2 Instalación de los servicios
 
-#### 3.2.1 Netbird
+#### 3.2.1 NetBird
 
-Netbird puede ser instalado desde su [página oficial](https://netbird.io/) ofreciendonos distintos modos de [instalación](https://app.netbird.io/install) este lo instalaremos para nuestro PC de escritorio que esta conectado mediante **SSH** donde iniciaremos sesión lo instalaremos para nuestro sistema operativo correspondiente y accedemos al panel de control de nuestra VPN Netbird
+NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al panel de control de nuestra VPN.
