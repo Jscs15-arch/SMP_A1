@@ -135,4 +135,17 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 
 #### 3.2.1 NetBird
 
-NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al [panel de control](https://app.netbird.io/peers) de nuestra VPN.
+NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al [panel de control](https://app.netbird.io/peers) de nuestra VPN, aqui podremos administrar y gestionar equipos y usuarios de netbird.
+
+Para agregar el servidor a la red NetBird, solo debemos añadir un *peer* siguiendo los pasos de [instalación para Ubuntu](https://app.netbird.io/install) y al levantar el servicio (`netbird up`) este nos solicitará una Setup Key que crearemos de la siguiente manera:
+
+- Accedemos al panel de Netbird apartado [Setup Key](https://app.netbird.io/setup-keys).
+
+- Crearemos una clave temporal para la instalación (Podemos cambiarlo para 1 día).
+
+- Y utilizaremos esta clave generada para que Netbird se autoconfigure.
+
+Una vez realizado este paso, ya tendríamos el servidor integrado como parte de la red VPN.
+
+> [!Important]
+> Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall.
