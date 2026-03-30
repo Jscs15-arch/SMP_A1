@@ -149,3 +149,109 @@ Una vez realizado este paso, ya tendríamos el servidor integrado como parte de 
 
 > [!Important]
 > Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall.
+
+#### 3.2.2 Uncomplicated FireWall (UFW)
+
+Para UFW tenemos que tener en cuenta los puertos que se desean abrir o cerrar y que usuario (Por IP), red o interfaz queremos que afecte.
+
+> [!Warning]
+> Antes que nada, habilitar SSH para mantener el acceso en caso de uso (``sudo ufw allow OpenSSH``)
+
+##### Comandos basicos:
+
+Comprobar actividad:
+```bash
+sudo ufw status
+```
+
+Habilitar UFW:
+```bash
+sudo ufw allow OpenSSH
+
+sudo ufw enable
+```
+
+Ver lista de reglas actuales:
+```bash
+sudo ufw status verbose
+
+sudo ufw status numbered
+```
+
+Desactivar UFW:
+
+```bash
+sudo ufw disable
+```
+
+##### Bloqueo de direcciones IP y subredes
+
+ Bloquear una IP específica:
+```bash
+sudo ufw deny from 255.255.255.255 
+```
+
+ Bloquear una subred completa:
+```bash
+sudo ufw deny from 255.255.255.0/24 
+```
+
+ Bloquear una IP en una interfaz específica:
+```bash
+sudo ufw deny in on eth0 from 255.255.255.255
+```
+
+##### Permitir direcciones IP:
+
+ Permitir todo el tráfico desde una IP específica:
+```bash
+sudo ufw allow from 255.255.255.255 /IP
+```
+
+ Permitir el tráfico entrante desde una IP en una interfaz específica:
+```bash
+sudo ufw allow in on eth0 from 255.255.255.255 /IP
+```
+
+##### Eliminación de reglas:
+
+ Eliminar una regla por sus parámetros:
+```bash
+sudo ufw delete allow from 91.198.174.192 
+```
+
+ Eliminar una regla por número:
+```bash
+ sudo ufw status numbered 
+ 
+ sudo ufw delete 1 /Numero del status numbered deseado
+```
+
+##### Apertura de puertos comunes
+ SSH (puerto 22):
+```bash
+sudo ufw allow 22 
+```
+
+HTTP (puerto 80):
+```bash
+sudo ufw allow http 
+```
+
+HTTPS (puerto 443):
+```bash
+sudo ufw allow https 
+```
+
+HTTP + HTTPS combinado:
+```bash
+sudo ufw allow proto tcp from any to any port 80,443 
+```
+
+##### Permitir una subred:
+```bash
+sudo ufw allow from 255.255.255.0/24 to any port 3306 
+```
+
+> [!Important]
+> Se debe tomar precaución al abrir y cerrar puertos ya que podriamos perder acceso o ceder acceso no deseado.
