@@ -255,3 +255,62 @@ sudo ufw allow from 255.255.255.0/24 to any port 3306
 
 > [!Important]
 > Se debe tomar precaución al abrir y cerrar puertos ya que podriamos perder acceso o ceder acceso no deseado.
+
+#### Fail2ban
+
+##### Intalación:
+```bash
+sudo apt update && sudo apt install fail2ban
+```
+
+##### Configuración para la protección de SSH (Perzonalizado)
+
+Al instalar Fail2ban este tiene una configuración preestablecida de SSH server la cual puede ser pezonalizada de la siguiente forma (Tambien pueden ser agregados más servicios):
+
+- Accedemos al fichero `sudo nano /etc/fail2ban/jail.conf`
+
+- Buscamos el campo `[sshd]`
+
+- Modificamos con los parametros deseados, [ejemplo](#ejemplo-de-sshd)
+
+- reiniciamos el servicio 
+```bash
+sudo service fail2ban restart
+```
+
+##### Ejemplo de sshd
+```bash
+[sshd] 
+
+enabled = true 
+port    = ssh 
+filter  = sshd 
+logpath  = /var/log/auth.log 
+maxretry = 3 
+bantime  = 5m
+```
+| Variable | Descripción |
+|----------|-------------|
+| [sshd] | Es el nombre de la sección o "jail" (cárcel). Define las reglas específicas para proteger el servicio de SSH. |
+| enabled = true | Indica que esta protección está activada. Si fuera false, Fail2Ban ignoraría estas reglas. |
+| port = ssh | Especifica el puerto que debe monitorear. Puede ser el nombre del servicio (ssh) o el número del puerto (por defecto 22). |
+| filter = sshd | Le dice a Fail2Ban qué filtro (archivo de configuración con expresiones regulares) debe usar para buscar intentos de acceso fallidos en los registros. |
+| logpath = /var/log/auth.log | Es la ruta del archivo de registro donde el sistema guarda los intentos de inicio de sesión. Fail2Ban lo "lee" en tiempo real. |
+| maxretry = 3 | Es el número de intentos fallidos permitidos antes de aplicar un bloqueo. |
+| bantime = 5m | Es la duración del bloqueo. En este caso, el atacante no podrá intentar conectarse durante 5 minutos. |
+
+##### Comprobación 
+
+1. Realizar intentos de acceso fallidos
+
+2. Comprobamos las IP's enjauladas
+
+- Comando de inspección:
+```bash
+sudo fail2ban-client status
+```
+
+- Inspección del fichero:
+```bash
+sudo cat /var/log/fail2ban.log | grep Ban
+```
