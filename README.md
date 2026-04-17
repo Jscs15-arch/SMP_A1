@@ -50,7 +50,7 @@ En mi caso lo he personalizado de la siguiente forma:
 
 ### 2.3. Servidor **SSH**
 
-#### 2.3.1 Instalación de **SSH**
+#### 2.3.1. Instalación de **SSH**
 
 Para **SSH**, podemos instalarlo durante la instalación del servidor en uno de los pasos del asistente o de la siguiente manera a través de la CLI:
 
@@ -78,7 +78,7 @@ sudo systemctl start ssh
 sudo system enable ssh
 ```
 
-#### 2.3.2 Cliente **SSH**
+#### 2.3.2. Cliente **SSH**
 Para conectarnos a nuestro servidor mediante **SSH**, solo debemos tener un cliente de SSH (ya sea gráfico o por CLI) donde agregaremos las credenciales necesarias, el puerto establecido y la IP del servidor (o nombre).
 
 - Mediante cliente GUI ([Terminus](https://termius.com/index.html) en mi caso, ya que funciona tanto en móvil como PC):
@@ -94,7 +94,7 @@ ssh usuario@host_o_ip                   /En caso de puerto predeterminado (22)
 ssh -p puerto usuario@host_o_ip         /En caso de puerto personalizado
 ```
 
-#### 2.3.3 Limpieza de Fingerprint SSH
+#### 2.3.3. Limpieza de Fingerprint SSH
 
 ```shell
 ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la firgerprint ocupada
@@ -106,7 +106,7 @@ ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la firgerprint ocupada
 
 ## 3. Servicios
 
-### 3.1 Servicios a utilizar
+### 3.1. Servicios a utilizar
 
 Primero instalaremos los servicios más críticos y necesarios, además de algunos que provee Ubuntu; luego iremos con los referentes a los usuarios y necesidades.
 
@@ -131,9 +131,9 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 > #### - Sumidero de DNS 
 >   Técnica de seguridad que intercepta consultas DNS de dominios maliciosos o no deseados, devolviendo una IP falsa (generalmente local o "agujero negro") para impedir que los equipos se conecten a sitios dañinos. Funciona como una defensa activa, bloqueando conexiones a botnets o bloqueando publicidad a nivel de red. 
 
-### 3.2 Instalación de los servicios
+### 3.2. Instalación de los servicios
 
-#### 3.2.1 NetBird
+#### 3.2.1. NetBird
 
 NetBird puede ser instalado desde su [página oficial](https://netbird.io/), la cual nos ofrece distintos modos de [instalación](https://app.netbird.io/install). En este caso, lo instalaremos en nuestro PC de escritorio: iniciaremos sesión, lo instalaremos para nuestro sistema operativo correspondiente y accederemos al [panel de control](https://app.netbird.io/peers) de nuestra VPN, aqui podremos administrar y gestionar equipos y usuarios de netbird.
 
@@ -150,7 +150,7 @@ Una vez realizado este paso, ya tendríamos el servidor integrado como parte de 
 > [!Important]
 > Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall.
 
-#### 3.2.2 Uncomplicated FireWall (UFW)
+#### 3.2.2. Uncomplicated FireWall (UFW)
 
 Para UFW tenemos que tener en cuenta los puertos que se desean abrir o cerrar y que usuario (Por IP), red o interfaz queremos que afecte.
 
@@ -217,7 +217,7 @@ sudo ufw allow in on eth0 from 255.255.255.255 /IP
 
  Eliminar una regla por sus parámetros:
 ```bash
-sudo ufw delete allow from 91.198.174.192 
+sudo ufw delete allow from 255.255.255.255
 ```
 
  Eliminar una regla por número:
@@ -250,13 +250,13 @@ sudo ufw allow proto tcp from any to any port 80,443
 
 ##### Permitir una subred:
 ```bash
-sudo ufw allow from 255.255.255.0/24 to any port 3306 
+sudo ufw allow from 255.255.255.0/24 to any port 22
 ```
 
 > [!Important]
 > Se debe tomar precaución al abrir y cerrar puertos ya que podriamos perder acceso o ceder acceso no deseado.
 
-#### Fail2ban
+#### 3.2.3. Fail2ban
 
 ##### Intalación:
 ```bash
@@ -267,13 +267,13 @@ sudo apt update && sudo apt install fail2ban
 
 Al instalar Fail2ban este tiene una configuración preestablecida de SSH server la cual puede ser pezonalizada de la siguiente forma (Tambien pueden ser agregados más servicios):
 
-- Accedemos al fichero `sudo nano /etc/fail2ban/jail.conf`
+1. Accedemos al fichero `sudo nano /etc/fail2ban/jail.conf`
 
-- Buscamos el campo `[sshd]`
+2. Buscamos el campo `[sshd]`
 
-- Modificamos con los parametros deseados, [ejemplo](#ejemplo-de-sshd)
+3. Modificamos con los parametros deseados, [ejemplo](#ejemplo-de-sshd)
 
-- reiniciamos el servicio 
+4. reiniciamos el servicio 
 ```bash
 sudo service fail2ban restart
 ```
@@ -291,9 +291,9 @@ bantime  = 5m
 ```
 | Variable | Descripción |
 |----------|-------------|
-| [sshd] | Es el nombre de la sección o "jail" (cárcel). Define las reglas específicas para proteger el servicio de SSH. |
+| [sshd] | Es el nombre de la sección o jail. Define las reglas específicas para proteger el servicio de SSH. |
 | enabled = true | Indica que esta protección está activada. Si fuera false, Fail2Ban ignoraría estas reglas. |
-| port = ssh | Especifica el puerto que debe monitorear. Puede ser el nombre del servicio (ssh) o el número del puerto (por defecto 22). |
+| port = ssh | Especifica el puerto que debe monitorear. Puede ser el nombre del servicio o el número del puerto (ssh por defecto 22). |
 | filter = sshd | Le dice a Fail2Ban qué filtro (archivo de configuración con expresiones regulares) debe usar para buscar intentos de acceso fallidos en los registros. |
 | logpath = /var/log/auth.log | Es la ruta del archivo de registro donde el sistema guarda los intentos de inicio de sesión. Fail2Ban lo "lee" en tiempo real. |
 | maxretry = 3 | Es el número de intentos fallidos permitidos antes de aplicar un bloqueo. |
@@ -314,3 +314,80 @@ sudo fail2ban-client status
 ```bash
 sudo cat /var/log/fail2ban.log | grep Ban
 ```
+
+#### 3.2.4. Apache2
+
+> [!Important]
+> Apache2 se utilizará como **reverse proxy**. En la sección de cada servicio, detallaré cómo agregarlo y los requisitos específicos necesarios.
+> 
+> En este apartado solo encontrarás explicaciones sobre las herramientas que utilizaremos y enlaces a los archivos de configuración correspondientes.
+
+##### Instalación
+
+```bash
+sudo apt update $$ sudo apt install apache2 -y
+```
+
+
+> [!Note]
+> Al finalizar la descarga podemos pasar a comprobar el estado y en caso de encontrase deshabilitado habilitarlo.
+
+- **Estado**
+```bash
+sudo systemctl status apache2
+```
+- **habilitar**
+```bash
+sudo systemctl start apache2
+```
+- **habilitar al arrancar**
+```bash
+sudo systemctl enable apache2
+```
+
+###### Extenciones
+
+| Modulo | Comando para activar | Uso principal |
+|--------|----------------------|---------------|	
+|SSL | sudo a2enmod ssl | Habilitar HTTPS y certificados |
+|Headers | sudo a2enmod headers | Modificar cabeceras de respuesta |
+|Forward/Proxy | sudo a2enmod proxy | Base para reenviar peticiones a otros servidores |
+|Proxy HTTP| sudo a2enmod proxy_http | Necesario para hacer Reverse Proxy a apps |
+|Rewrite | sudo a2enmod rewrite | Para reglas de redirección de URLs |
+
+###### 1. Verifica que no haya errores de sintaxis
+```bash
+sudo apache2ctl configtest
+```
+
+###### 2. Si dice "Syntax OK", reinicia Apache
+```bash
+sudo systemctl restart apache2
+```
+
+##### **Virtual host's para reverse proxy**
+
+- [Reenvio del puerto 80 a 443](#reenvio-del-puerto-80-a-443)
+
+- [Pi-hole](#)
+
+- [Nextcloud]()
+     - [Signaling]()
+     - [Only office]()
+
+- [Webmin]()
+
+- [Odoo]()
+
+- [Portainer]()
+
+###### **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
+
+```bash
+<VirtualHost *:80>
+    ServerName server.home
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+ </VirtualHost>
+ ```
