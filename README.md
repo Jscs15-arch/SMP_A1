@@ -367,7 +367,7 @@ sudo systemctl restart apache2
 
 ##### **Virtual host's para reverse proxy**
 
-- [Reenvio del puerto 80 a 443](#reenvio-del-puerto-80-a-443)
+- [Reenvio del puerto 80 a 443](#--reenvio-del-puerto-80-a-443-http-a-https)
 
 - [Pi-hole](#)
 
@@ -381,7 +381,7 @@ sudo systemctl restart apache2
 
 - [Portainer]()
 
-###### **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
+###### - **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
 
 ```bash
 <VirtualHost *:80>
