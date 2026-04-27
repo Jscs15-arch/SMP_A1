@@ -89,7 +89,7 @@ Para conectarnos a nuestro servidor mediante **SSH**, solo debemos tener un clie
 - Mediante CLI (Terminal que se desea usar)
 
 ```shell
-ssh usuario@host_o_ip                   /En caso de puerto predeterminado (22)
+ssh usuario@host_o_ip       /En caso de puerto predeterminado (22)
 
 ssh -p puerto usuario@host_o_ip         /En caso de puerto personalizado
 ```
@@ -345,7 +345,7 @@ sudo systemctl start apache2
 sudo systemctl enable apache2
 ```
 
-###### Extenciones
+###### **Extenciones**
 
 | Modulo | Comando para activar | Uso principal |
 |--------|----------------------|---------------|	
@@ -375,7 +375,7 @@ sudo systemctl restart apache2
      - [Signaling]()
      - [Only office]()
 
-- [Webmin]()
+- [Webmin](#reverse-proxy)
 
 - [Odoo]()
 
@@ -385,9 +385,92 @@ sudo systemctl restart apache2
 
 ```bash
 <VirtualHost *:80>
-    ServerName server.home
+    ServerName dominio.com
     RewriteEngine On
     RewriteCond %{HTTPS} off
     RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
  </VirtualHost>
  ```
+
+ #### 3.2.5. Webmin
+
+ ##### **Instalación**
+
+ - Setup
+```bash
+curl -o webmin-setup-repo.sh https://raw.githubusercontent.com/webmin/webmin/master/webmin-setup-repo.sh
+sudo sh webmin-setup-repo.sh
+```
+
+- apt
+```bash
+sudo apt-get install webmin --install-recommends
+```
+
+##### Configuraciones perzonalizadas
+
+Acceder al fichero `/etc/webmin/miniserv.conf` para configurar distintas cosas.
+
+> [!Note]
+> Estas configuraciones pueden ser modificadas tambien desde la interfaz de Webmin.
+```bash
+port=10000
+ssl=0    # Esto causa que webmin abra en http pero el proxy se encargara de cambiar de https del cliente a http al servidor
+behind_proxy=1
+cookie_secure=1
+no_ssl2=1
+no_ssl3=1
+listen=10000
+logouttimes=
+referers_none=1
+trust_real_ip=1
+cookiepath=/
+redirect_port=443
+redirect_ssl=1
+relative_redir=1
+no_redirect_port=1
+host=sub.dominio.com
+proxies=127.0.0.1
+no_resolv_myname=0
+websockets_ssl=1
+websockets_port=443
+websockets_host=sub.dominio.com
+ext_prefix_https=1
+xterm_port=443
+xterm_protocol=wss
+```
+
+> [!Important]
+> En caso de mal funcinamiento de websockets configurar en Webmin lo siguiente
+
+###### **Configuración de websockets en Webmin**
+
+Ruta: Panel izquierdo de Webmin → Webmin → Configuración de Webmin → Puertos y Direcciones → Nombre de host para conexiones WebSockets
+
+Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor Web `sub.dominio.com`
+
+##### **Reverse proxy**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/ceritificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    # Websocket http (Cambiado a ws:// porque Webmin tiene ssl=0)
+    RewriteEngine on
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/?(.*) "ws://127.0.0.1:10000/$1" [P,L]
+    
+    # http porque Webmin tiene ssl=0 y puerto en que se encuentra
+    ProxyPreserveHost ON
+    ProxyPass / http://127.0.0.1:10000/
+    ProxyPassReverse / http://127.0.0.1:10000/
+    
+    # CABECERAS (Importantes para que Webmin sepa que el usuario usa HTTP>
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+    ProxyPassReverseCookiePath / /
+</VirtualHost>
+```
