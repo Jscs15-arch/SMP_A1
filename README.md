@@ -454,7 +454,7 @@ Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor We
 <VirtualHost *:443>
     ServerName sub.dominio.com
     SSLEngine on
-    SSLCertificateFile /etc/apache2/ssl/ceritificado.crt
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
     SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
 
     # Websocket http (Cambiado a ws:// porque Webmin tiene ssl=0)
