@@ -125,6 +125,8 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 | **Pihole** | *DNS y filtrado* | Contenedor | Aplicación que funciona como un [*sumidero de DNS*](#--sumidero-de-dns) diseñado para proteger tu red frente a contenido no deseado sin necesidad de instalar software en cada cliente. |
 | **Nextcloud** | *Cloud y otros* | Contenedor | Plataforma de colaboración de código abierto diseñada para crear tu propia nube privada autoalojada, ofreciendo una alternativa segura a servicios como Google Drive o Dropbox. |
 | **Odoo** | *ERP/CRM* | Contenedor | Plataforma de gestión empresarial "todo en uno" de código abierto, diseñada para centralizar todas las operaciones de un negocio en una sola herramienta modular. |
+| Zammad | Ticketing | Contenedor |  |
+| Duplicati | Backups (Copias de seguridad) | Contenedor |  |
 | WIP | WIP | WIP | ***W***ork ***I***n ***P***rogress |
 
 > [!Note]
@@ -148,7 +150,51 @@ Para agregar el servidor a la red NetBird, solo debemos añadir un *peer* siguie
 Una vez realizado este paso, ya tendríamos el servidor integrado como parte de la red VPN.
 
 > [!Important]
-> Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall.
+> Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall y DNS.
+
+##### Script para prevención de bloqueo de DNS
+```bash
+#!/bin/bash
+
+echo "Arrancando daemon de NetBird..."
+echo "Esperando a que exista el socket..."
+while [ ! -S /var/run/netbird.sock ]; do
+    sleep 1
+done
+echo "Esperando a Pi-hole..."
+while ! docker ps | grep -q pihole; do
+        sleep 2
+done
+echo "Esperando a que Pi-hole use el puerto 53..."
+# Espera hasta que el puerto 53 esté ocupado por docker/pihole
+while ! ss -tulpn | grep -q ":53"; do
+     sleep 2
+done
+echo "Puerto 53 activo, arrancando NetBird sin DNS..."
+# Arrancar NetBird sin DNS
+netbird up --disable-dns
+```
+
+##### Implementar script en arranque
+1. Crear fichero para el daemon [/etc/systemd/system/script_daemon](#daemon)
+2. Ejecutar sudo systemctl daemon-reload.
+3. Ejecutaste sudo systemctl enable --now script.
+
+###### Daemon
+```bash
+[Unit]
+Description=Start NetBird after Pi-hole
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/script.sh
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target
+```
 
 #### 3.2.2. Uncomplicated FireWall (UFW)
 
@@ -380,6 +426,10 @@ sudo systemctl restart apache2
 - [Odoo]()
 
 - [Portainer]()
+
+- [Zammad]()
+
+- [Duplicati]()
 
 ###### - **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
 
