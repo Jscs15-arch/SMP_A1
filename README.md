@@ -125,8 +125,8 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 | **Pihole** | *DNS y filtrado* | Contenedor | Aplicación que funciona como un [*sumidero de DNS*](#--sumidero-de-dns) diseñado para proteger tu red frente a contenido no deseado sin necesidad de instalar software en cada cliente. |
 | **Nextcloud** | *Cloud y otros* | Contenedor | Plataforma de colaboración de código abierto diseñada para crear tu propia nube privada autoalojada, ofreciendo una alternativa segura a servicios como Google Drive o Dropbox. |
 | **Odoo** | *ERP/CRM* | Contenedor | Plataforma de gestión empresarial "todo en uno" de código abierto, diseñada para centralizar todas las operaciones de un negocio en una sola herramienta modular. |
-| Zammad | Ticketing | Contenedor |  |
-| Duplicati | Backups (Copias de seguridad) | Contenedor |  |
+| **Zammad** | *Ticketing* | Contenedor | plataforma de gestión de atención al cliente y soporte técnico de código abierto, diseñada para actuar como un centro de mando unificado donde convergen todas las comunicaciones de una organización. |
+| **Duplicati** | *Backups* (Copias de seguridad) | Contenedor | Solución de software libre dedicada a la protección de datos mediante la gestión de copias de seguridad cifradas en la nube y sistemas de almacenamiento remoto. |
 | WIP | WIP | WIP | ***W***ork ***I***n ***P***rogress |
 
 > [!Note]
@@ -180,7 +180,7 @@ netbird up --disable-dns
 2. Ejecutar sudo systemctl daemon-reload.
 3. Ejecutaste sudo systemctl enable --now script.
 
-###### Daemon
+###### **Daemon**
 ```bash
 [Unit]
 Description=Start NetBird after Pi-hole
@@ -200,8 +200,30 @@ WantedBy=multi-user.target
 
 Para UFW tenemos que tener en cuenta los puertos que se desean abrir o cerrar y que usuario (Por IP), red o interfaz queremos que afecte.
 
+##### Instalación
+UFW
+```bash
+sudo apt update && sudo apt install ufw -y
+```
+UFW-docker 
+Script para cambiar reglas de docker
+```bash
+# 1. Descargar el script oficial
+sudo wget -O /usr/local/bin/ufw-docker https://github.com/chaifeng/ufw-docker/raw/refs/heads/master/ufw-docker
+
+# 2. Dar permisos de ejecución
+sudo chmod +x /usr/local/bin/ufw-docker
+
+# 3. Modificar la configuración de UFW para que interactúe con Docker
+# Este comando añade las reglas necesarias a /etc/ufw/after.rules
+sudo ufw-docker install
+```
+
 > [!Warning]
 > Antes que nada, habilitar SSH para mantener el acceso en caso de uso (``sudo ufw allow OpenSSH``)
+
+> [!Note]
+> Todos los comandos pueden ser usados para ufw-docker agregando `ufw-docker` al comando
 
 ##### Comandos basicos:
 
@@ -411,21 +433,35 @@ sudo apache2ctl configtest
 sudo systemctl restart apache2
 ```
 
+##### Generar certificado autofirmado
+Se debe definir los días 
+```bash
+sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
+  -keyout /etc/apache2/ssl/apache.key \
+  -out /etc/apache2/ssl/apache.crt
+```
+
 ##### **Virtual host's para reverse proxy**
+
+> [!Important]
+> Cambiar puertos a los establecidos en los stacks (compose)
+
+> [!Warning]
+> No establecer un puerto a multiples servicios
 
 - [Reenvio del puerto 80 a 443](#--reenvio-del-puerto-80-a-443-http-a-https)
 
-- [Pi-hole](#)
+- [Pi-hole](#reverse-proxy-para-pi-hole)
 
 - [Nextcloud]()
      - [Signaling]()
      - [Only office]()
 
-- [Webmin](#reverse-proxy)
+- [Webmin](#reverse-proxy-para-webmin)
 
 - [Odoo]()
 
-- [Portainer]()
+- [Portainer](#reverse-proxy-para-portainer)
 
 - [Zammad]()
 
@@ -442,9 +478,9 @@ sudo systemctl restart apache2
  </VirtualHost>
  ```
 
- #### 3.2.5. Webmin
+#### 3.2.5. Webmin
 
- ##### **Instalación**
+##### **Instalación**
 
  - Setup
 ```bash
@@ -499,10 +535,12 @@ Ruta: Panel izquierdo de Webmin → Webmin → Configuración de Webmin → Puer
 
 Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor Web `sub.dominio.com`
 
-##### **Reverse proxy**
+##### **Reverse proxy para Webmin**
 ```bash
 <VirtualHost *:443>
     ServerName sub.dominio.com
+
+    # Establecer certificado para https
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/certificado.crt
     SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
@@ -513,7 +551,7 @@ Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor We
     RewriteCond %{HTTP:Connection} upgrade [NC]
     RewriteRule ^/?(.*) "ws://127.0.0.1:10000/$1" [P,L]
     
-    # http porque Webmin tiene ssl=0 y puerto en que se encuentra
+    # http porque Webmin tiene ssl=0 y el puerto en que se encuentra
     ProxyPreserveHost ON
     ProxyPass / http://127.0.0.1:10000/
     ProxyPassReverse / http://127.0.0.1:10000/
@@ -523,4 +561,242 @@ Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor We
     RequestHeader set X-Forwarded-Port "443"
     ProxyPassReverseCookiePath / /
 </VirtualHost>
+```
+
+#### 3.2.6. Docker
+
+1. Eliminar versiones antiguas de Docker Engine
+         ```bash      
+            for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+        ```
+2. : Incluir el repositorio de Docker CE
+
+        ```bash
+                # Add Docker's official GPG key:
+        sudo apt-get update
+        sudo apt-get install ca-certificates curl
+        sudo install -m 0755 -d /etc/apt/keyrings
+        sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+        sudo chmod a+r /etc/apt/keyrings/docker.asc
+        
+        # Add the repository to Apt sources:
+        echo \
+          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+          $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get update
+        ```
+3. Instalar Docker Engine CE
+
+        Actualizar el índice de paquetes e instalar la última versión de Docker Engine CE
+        ```bash
+        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+        ```
+4. Comprobar la instalación
+     ```bash
+         sudo docker version
+     ```
+> [!Note]
+> **Recomendación post instalación**
+>
+> ##### **Permitir administrar Docker con usuarios sin privilegios**
+>
+>    Crear el grupo docker
+>    ```bash
+>         sudo groupadd docker
+>    ```
+>
+>    Añadir a los usuarios deseados a ese grupo
+>    ```bash
+>        sudo usermod -aG docker $USER
+>    ```
+>
+>    Especificar que el grupo docker administra el fichero docker.sock
+>    ```bash
+>        newgrp docker
+>    ```
+>
+>     Comprobación
+>    ```bash
+>        docker run hello-world
+>    ```
+
+> [!Important]
+> Para todos los contenedores se debe tener en cuenta los **puertos ocupados**
+
+#### 3.2.6. Portainer
+
+##### **Instalación**
+
+```bash
+docker run -d \
+  --name portainer \
+  --restart=always \
+  -p 127.0.0.1:8000:8000 \
+  -p 127.0.0.1:9443:9443 \
+  -v /var/run/docker.sock:/var/run/docker.sock \
+  -v portainer_data:/data \
+  portainer/portainer-ce:lts
+```
+
+> [!Note]
+> **docker run**
+> Inicia un nuevo contenedor Docker a partir de una imagen.
+> 
+> **-d**
+> Ejecuta el contenedor en segundo plano (detached mode).
+> 
+> **-p "127.0.0.1:8000:8000"**
+> Mapea el puerto 8000 del host al puerto 8000 del contenedor.
+> 127.0.0.1 → solo accesible localmente
+> Primer 8000 → puerto del host
+> Segundo 8000 → puerto interno del contenedor
+>
+> **-p "127.0.0.1:9443:9443"**
+> Mapea el puerto HTTPS principal de Portainer.
+> Esto permite acceder a la interfaz web mediante:
+> https://localhost:9443 o solo pueda acceder el servidor local y el reverse proxy  
+> 
+> **--name portainer**
+> Asigna el nombre portainer al contenedor.
+> 
+> **--restart=always**
+> Hace que el contenedor se reinicie automáticamente:
+> si falla
+> si Docker se reinicia
+> si el sistema operativo se reinicia
+> **-v /var/run/docker.sock:/var/run/docker.sock**
+> Monta el socket de Docker dentro del contenedor.
+> Esto permite que Portainer administre Docker del host.
+> 
+> **-v portainer_data:/data**
+> Crea y monta un volumen persistente llamado portainer_data.
+> Ahí se guardan:
+> configuraciones
+> usuarios
+> contraseñas
+> datos de Portainer
+>
+> **portainer/portainer-ce:lts**
+> Imagen Docker que se ejecutará:
+> portainer/portainer-ce: imagen oficial Community Edition
+> lts: versión Long Term Support
+
+##### **Reverse proxy para Portainer**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    # Establecer certificado para https
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    # Soporte para WebSockets (Consola de Contenedores y datos)
+    RewriteEngine on
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/?(.*) "wss://127.0.0.1:9443/$1" [P,L]
+
+    ProxyPreserveHost On
+    ProxyPass / https://127.0.0.1:9443/
+    ProxyPassReverse / https://127.0.0.1:9443/
+
+    # Deshabilitar verificación solo para SSL autofirmado
+    SSLProxyEngine on
+    SSLProxyVerify none
+    SSLProxyCheckPeerCN off
+    SSLProxyCheckPeerName off
+</VirtualHost>
+```
+
+#### 3.2.7. Pi-hole
+
+##### **Instalación mediante archivo Docker compose (Stack)**
+
+```yaml
+services:
+  pihole:
+    image: pihole/pihole:latest
+    container_name: pihole
+    restart: unless-stopped
+    networks:
+      - "nombre_de_red"
+    ports:
+      # UI limitada a reverse proxy (IP del reverse)
+      - "127.0.0.1:8080:80" # Cambiar a puerto disponible
+      # Deben estar abiertos para proveer DNS
+      - "IP:53:53/tcp"
+      - "IP:53:53/udp"
+    environment:
+      TZ: "Europe/Madrid"
+      WEBPASSWORD: "Clave_para_UI"
+    dns:
+      - 127.0.0.1
+    volumes:
+      - ./etc:/etc/pihole
+      - ./dnsmasq:/etc/dnsmasq.d
+      # Certificado para autenticar uso de Iframe
+      - /etc/apache2/ssl/certificado.crt:/usr/local/share/ca-certificates/certificado.crt:ro
+    extra_hosts:
+      - "sub.dominio.com:IP" # servidor apache
+    # Actualizar certificados
+    command: >
+      /bin/sh -c "update-ca-certificates && /entrypoint.sh"
+
+networks:
+  nombre_de_red:
+    driver: bridge
+    name: nombre_de_red
+```
+
+##### **Configuraciones**
+
+###### **Interfaz a la cual respondera DNS**
+
+Ruta: Panel izquierdo de Pi-hole → Settings → DNS → Interface settings
+
+Al ser un contenedor por defecto estara resolviendo solo para la red docker por ello debemos cambiar la interfaz donde respondera a la que usa el contenedor para comunicarse con el servidor
+
+> [!Warning]
+> Asegurar la correcta implementacíon de firewall para DNS (Puerto 53) 
+
+###### **Local DNS**
+
+Ruta: Panel izquierdo de Pi-hole → Settings → Local DNS Records
+
+Agregamos IP's a **`List of local DNS records`**
+
+###### **Servidores upstream**
+
+Son DNS externos a los que Pi-hole envía las consultas legítimas después de bloquear los dominios no deseados.
+
+Ruta: Panel izquierdo de Pi-hole → Settings → DNS → Upstream DNS Servers
+
+Agregamos DNS's de Google u otros proveedores, en caso de usar unbound debera ser agregado como `IP#5335`
+
+##### **Reverse proxy para Pi-hole**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    # Proxy HTTP
+    ProxyPreserveHost On
+    ProxyPass / http://127.0.0.1:8081/
+    ProxyPassReverse / http://127.0.0.1:8081/
+
+    # WebSocket
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Ssl "on"
+
+    # PERMITIR IFRAME
+    Header always unset X-Frame-Options
+    Header always set Content-Security-Policy "frame-ancestors 'self' https://sub.dominio.com"
+
+    ProxyTimeout 300
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+    </VirtualHost>
 ```
