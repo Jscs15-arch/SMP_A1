@@ -11,7 +11,7 @@
 | **CPU** | Ryzen 5 Pro 6650H (6C/12T) |
 | **RAM** | 16 GB DDR5 |
 | **Almacenamiento** | 1 TB SSD |
-| **S.O.** | Ubuntu Server 24.04.3. |
+| **S.O.** | Ubuntu Server 24.04.4. |
 
 ## 2. Configuraciones básicas del servidor
 
@@ -66,8 +66,8 @@ systemctl status ssh
 Salida:
 ```console
 ssh.service - OpenBSD Secure Shell server
-     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: enabled)    // Como vemos el preset se encuentra enabled
-          Active: active (running) since Tue 2026-02-24 18:02:45 CET; 16h ago           // Nos centramos en esta linea
+     Loaded: loaded (/usr/lib/systemd/system/ssh.service; disabled; preset: enabled)    # Como vemos el preset se encuentra enabled
+          Active: active (running) since Tue 2026-02-24 18:02:45 CET; 16h ago           # Nos centramos en esta linea
           TriggeredBy: ● ssh.socket
 ```
 
@@ -89,15 +89,15 @@ Para conectarnos a nuestro servidor mediante **SSH**, solo debemos tener un clie
 - Mediante CLI (Terminal que se desea usar)
 
 ```shell
-ssh usuario@host_o_ip       /En caso de puerto predeterminado (22)
+ssh usuario@host_o_ip       #En caso de puerto predeterminado (22)
 
-ssh -p puerto usuario@host_o_ip         /En caso de puerto personalizado
+ssh -p puerto usuario@host_o_ip         #En caso de puerto personalizado
 ```
 
 #### 2.3.3. Limpieza de Fingerprint SSH
 
 ```shell
-ssh-keygen -R [nombre_del_host_o_IP]    /Para limpiar la firgerprint ocupada
+ssh-keygen -R [nombre_del_host_o_IP]    #Para limpiar la firgerprint ocupada
 ```
 
 > [!Note]
@@ -125,7 +125,7 @@ Primero instalaremos los servicios más críticos y necesarios, además de algun
 | **Pihole** | *DNS y filtrado* | Contenedor | Aplicación que funciona como un [*sumidero de DNS*](#--sumidero-de-dns) diseñado para proteger tu red frente a contenido no deseado sin necesidad de instalar software en cada cliente. |
 | **Nextcloud** | *Cloud y otros* | Contenedor | Plataforma de colaboración de código abierto diseñada para crear tu propia nube privada autoalojada, ofreciendo una alternativa segura a servicios como Google Drive o Dropbox. |
 | **Odoo** | *ERP/CRM* | Contenedor | Plataforma de gestión empresarial "todo en uno" de código abierto, diseñada para centralizar todas las operaciones de un negocio en una sola herramienta modular. |
-| **Zammad** | *Ticketing* | Contenedor | plataforma de gestión de atención al cliente y soporte técnico de código abierto, diseñada para actuar como un centro de mando unificado donde convergen todas las comunicaciones de una organización. |
+| **Zammad** | *Ticketing* | Contenedor | Plataforma de gestión de atención al cliente y soporte técnico de código abierto, diseñada para actuar como un centro de mando unificado donde convergen todas las comunicaciones de una organización. |
 | **Duplicati** | *Backups* (Copias de seguridad) | Contenedor | Solución de software libre dedicada a la protección de datos mediante la gestión de copias de seguridad cifradas en la nube y sistemas de almacenamiento remoto. |
 | WIP | WIP | WIP | ***W***ork ***I***n ***P***rogress |
 
@@ -152,49 +152,64 @@ Una vez realizado este paso, ya tendríamos el servidor integrado como parte de 
 > [!Important]
 > Recordad que NetBird genera una nueva interfaz de red y, además, actúa como DNS. Por ello, para ciertas configuraciones posteriores, deberemos desactivarlo. Sirva esto para aclarar su funcionamiento con respecto al Firewall y DNS.
 
-##### Script para prevención de bloqueo de DNS
-```bash
-#!/bin/bash
+> [!Warning]
+> [**OBSOLETO**]
+>
+> Después de la versión [**0.70.5**] de NetBird este ignora script y otros porque le han agregado nueva gestión de contenido incluyendo el DNS.
+>
+> [Proceso obligatorio para deshabilitar DNS de NetBird](#deshabilitar-dns-de-netbird-en-panel)
+>
+> ##### Script para prevención de bloqueo de DNS
+> ```bash
+> #!/bin/bash
+> 
+> echo "Arrancando daemon de NetBird..."
+> echo "Esperando a que exista el socket..."
+> while [ ! -S /var/run/netbird.sock ]; do
+>     sleep 1
+> done
+> echo "Esperando a Pi-hole..."
+> while ! docker ps | grep -q pihole; do
+>         sleep 2
+> done
+> echo "Esperando a que Pi-hole use el puerto 53..."
+> # Espera hasta que el puerto 53 esté ocupado por docker/pihole
+> while ! ss -tulpn | grep -q ":53"; do
+>      sleep 2
+> done
+> echo "Puerto 53 activo, arrancando NetBird sin DNS..."
+> # Arrancar NetBird sin DNS
+> netbird up --disable-dns
+> ```
+>
+> ##### Implementar script en arranque
+> 1. Crear fichero para el daemon [/etc/systemd/system/script_daemon](#daemon)
+> 2. Ejecutar sudo systemctl daemon-reload.
+> 3. Ejecutaste sudo systemctl enable --now script.
+> 
+> ###### **Daemon**
+> ```bash
+> [Unit]
+> Description=Start NetBird after Pi-hole
+> After=docker.service network-online.target
+> Wants=network-online.target
+>
+> [Service]
+> Type=simple
+> ExecStart=/usr/local/bin/script.sh
+> Restart=on-failure
+>
+> [Install]
+> WantedBy=multi-user.target
+> ```
 
-echo "Arrancando daemon de NetBird..."
-echo "Esperando a que exista el socket..."
-while [ ! -S /var/run/netbird.sock ]; do
-    sleep 1
-done
-echo "Esperando a Pi-hole..."
-while ! docker ps | grep -q pihole; do
-        sleep 2
-done
-echo "Esperando a que Pi-hole use el puerto 53..."
-# Espera hasta que el puerto 53 esté ocupado por docker/pihole
-while ! ss -tulpn | grep -q ":53"; do
-     sleep 2
-done
-echo "Puerto 53 activo, arrancando NetBird sin DNS..."
-# Arrancar NetBird sin DNS
-netbird up --disable-dns
-```
+##### **Deshabilitar DNS de NetBird en panel**
 
-##### Implementar script en arranque
-1. Crear fichero para el daemon [/etc/systemd/system/script_daemon](#daemon)
-2. Ejecutar sudo systemctl daemon-reload.
-3. Ejecutaste sudo systemctl enable --now script.
+1. Acceder al panel de NetBird en su [apartado DNS](https://app.netbird.io/dns/settings)
 
-###### **Daemon**
-```bash
-[Unit]
-Description=Start NetBird after Pi-hole
-After=docker.service network-online.target
-Wants=network-online.target
+2. Agregar a un grupo al que no se desee que tenga DNS
 
-[Service]
-Type=simple
-ExecStart=/usr/local/bin/script.sh
-Restart=on-failure
-
-[Install]
-WantedBy=multi-user.target
-```
+3. Finalizamos añadiendo el grupo que restringe DNS a los [peers](https://app.netbird.io/peers) necesarios (En este caso el servidor, ya que usaremos un DNS personalizado).
 
 #### 3.2.2. Uncomplicated FireWall (UFW)
 
@@ -434,11 +449,13 @@ sudo systemctl restart apache2
 ```
 
 ##### Generar certificado autofirmado
-Se debe definir los días 
+Se deben definir los días 
 ```bash
 sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
   -keyout /etc/apache2/ssl/apache.key \
-  -out /etc/apache2/ssl/apache.crt
+  -out /etc/apache2/ssl/apache.crt \
+  -subj "/C=ES/CN=*.dominio.com" \
+  -addext "subjectAltName = DNS:dominio.com, DNS:*.dominio.com"
 ```
 
 ##### **Virtual host's para reverse proxy**
@@ -449,34 +466,34 @@ sudo openssl req -x509 -nodes -days 3650 -newkey rsa:2048 \
 > [!Warning]
 > No establecer un puerto a multiples servicios
 
-- [Reenvio del puerto 80 a 443](#--reenvio-del-puerto-80-a-443-http-a-https)
+- [Reenvio del puerto 80 a 443](#reenvio-del-puerto-80-a-443-http-a-https)
 
 - [Pi-hole](#reverse-proxy-para-pi-hole)
 
-- [Nextcloud]()
-     - [Signaling]()
-     - [Only office]()
+- [Nextcloud](#reverse-proxy-para-nextcloud)
+    - [Signaling](#reverse-proxy-para-signaling)
+    - [Onlyoffice](#reverse-proxy-para-onlyoffice)
 
 - [Webmin](#reverse-proxy-para-webmin)
 
-- [Odoo]()
+- [Odoo](#reverse-proxy-para-odoo)
 
 - [Portainer](#reverse-proxy-para-portainer)
 
-- [Zammad]()
+- [Zammad](#reverse-proxy-para-zammad)
 
-- [Duplicati]()
+- [Duplicati](#reverse-proxy-para-duplicati)
 
-###### - **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
+###### **Reenvio del puerto 80 a 443 (HTTP a HTTPS):**
 
 ```bash
 <VirtualHost *:80>
-    ServerName dominio.com
-    RewriteEngine On
-    RewriteCond %{HTTPS} off
-    RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
- </VirtualHost>
- ```
+  ServerName dominio.com
+  RewriteEngine On
+  RewriteCond %{HTTPS} off
+  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+</VirtualHost>
+```
 
 #### 3.2.5. Webmin
 
@@ -531,48 +548,48 @@ xterm_protocol=wss
 
 ###### **Configuración de websockets en Webmin**
 
-Ruta: Panel izquierdo de Webmin → Webmin → Configuración de Webmin → Puertos y Direcciones → Nombre de host para conexiones WebSockets
+**Ruta:** Panel izquierdo de Webmin → Webmin → Configuración de Webmin → Puertos y Direcciones → Nombre de host para conexiones WebSockets
 
 Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor Web `sub.dominio.com`
 
 ##### **Reverse proxy para Webmin**
 ```bash
 <VirtualHost *:443>
-    ServerName sub.dominio.com
+  ServerName sub.dominio.com
 
-    # Establecer certificado para https
-    SSLEngine on
-    SSLCertificateFile /etc/apache2/ssl/certificado.crt
-    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+  # Establecer certificado para https
+  SSLEngine on
+  SSLCertificateFile /etc/apache2/ssl/certificado.crt
+  SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
 
-    # Websocket http (Cambiado a ws:// porque Webmin tiene ssl=0)
-    RewriteEngine on
-    RewriteCond %{HTTP:Upgrade} websocket [NC]
-    RewriteCond %{HTTP:Connection} upgrade [NC]
-    RewriteRule ^/?(.*) "ws://127.0.0.1:10000/$1" [P,L]
+  # Websocket http (Cambiado a ws:// porque Webmin tiene ssl=0)
+  RewriteEngine on
+  RewriteCond %{HTTP:Upgrade} websocket [NC]
+  RewriteCond %{HTTP:Connection} upgrade [NC]
+  RewriteRule ^/?(.*) "ws://127.0.0.1:10000/$1" [P,L]
     
-    # http porque Webmin tiene ssl=0 y el puerto en que se encuentra
-    ProxyPreserveHost ON
-    ProxyPass / http://127.0.0.1:10000/
-    ProxyPassReverse / http://127.0.0.1:10000/
+  # http porque Webmin tiene ssl=0 y el puerto en que se encuentra
+  ProxyPreserveHost ON
+  ProxyPass / http://127.0.0.1:10000/
+  ProxyPassReverse / http://127.0.0.1:10000/
     
-    # CABECERAS (Importantes para que Webmin sepa que el usuario usa HTTP>
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Port "443"
-    ProxyPassReverseCookiePath / /
+  # CABECERAS (Importantes para que Webmin sepa que el usuario usa HTTPS)
+  RequestHeader set X-Forwarded-Proto "https"
+  RequestHeader set X-Forwarded-Port "443"
+  ProxyPassReverseCookiePath / /
 </VirtualHost>
 ```
 
 #### 3.2.6. Docker
 
 1. Eliminar versiones antiguas de Docker Engine
-         ```bash      
-            for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
-        ```
+      ```bash      
+      for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove $pkg; done
+      ```
 2. : Incluir el repositorio de Docker CE
 
-        ```bash
-                # Add Docker's official GPG key:
+      ```bash
+        # Add Docker's official GPG key:
         sudo apt-get update
         sudo apt-get install ca-certificates curl
         sudo install -m 0755 -d /etc/apt/keyrings
@@ -581,45 +598,49 @@ Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor We
         
         # Add the repository to Apt sources:
         echo \
-          "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
-          $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
-          sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc]https://download.docker.com/linux/ubuntu \
+        $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}") stable" | \
+        sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
         sudo apt-get update
-        ```
+      ```
 3. Instalar Docker Engine CE
 
-        Actualizar el índice de paquetes e instalar la última versión de Docker Engine CE
-        ```bash
-        sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
-        ```
+    Actualizar el índice de paquetes e instalar la última versión de Docker Engine CE
+      ```bash
+      sudo apt-get install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+      ```
 4. Comprobar la instalación
-     ```bash
-         sudo docker version
-     ```
+    ```bash
+    sudo docker version
+    ```
+
 > [!Note]
 > **Recomendación post instalación**
 >
 > ##### **Permitir administrar Docker con usuarios sin privilegios**
 >
->    Crear el grupo docker
->    ```bash
->         sudo groupadd docker
->    ```
+> - Crear el grupo docker
+> ```bash
+>   sudo groupadd docker
+> ```
 >
->    Añadir a los usuarios deseados a ese grupo
->    ```bash
->        sudo usermod -aG docker $USER
->    ```
+> - Añadir a los usuarios deseados a ese grupo
+> ```bash
+>   sudo usermod -aG docker $USER
+> ```
 >
->    Especificar que el grupo docker administra el fichero docker.sock
->    ```bash
->        newgrp docker
->    ```
+> - Especificar que el grupo docker administra el fichero docker.sock
+> ```bash
+>   newgrp docker
+> ```
 >
->     Comprobación
->    ```bash
->        docker run hello-world
->    ```
+> - Comprobación
+> ```bash
+>   docker run hello-world
+> ```
+
+> [!Note]
+> Todos los stacks (Compose) pueden ser usados tanto 
 
 > [!Important]
 > Para todos los contenedores se debe tener en cuenta los **puertos ocupados**
@@ -630,54 +651,54 @@ Establecer como manual y agregar `wss://sub.dominio.com` y Nombre de servidor We
 
 ```bash
 docker run -d \
-  --name portainer \
-  --restart=always \
-  -p 127.0.0.1:8000:8000 \
-  -p 127.0.0.1:9443:9443 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v portainer_data:/data \
-  portainer/portainer-ce:lts
+--name portainer \
+--restart=always \
+-p 127.0.0.1:8000:8000 \
+-p 127.0.0.1:9443:9443 \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v /ruta:/data \
+portainer/portainer-ce:lts
 ```
 
 > [!Note]
-> **docker run**
+> - **docker run**
 > Inicia un nuevo contenedor Docker a partir de una imagen.
 > 
-> **-d**
+> - **-d**
 > Ejecuta el contenedor en segundo plano (detached mode).
 > 
-> **-p "127.0.0.1:8000:8000"**
+> - **-p "127.0.0.1:8000:8000"**
 > Mapea el puerto 8000 del host al puerto 8000 del contenedor.
 > 127.0.0.1 → solo accesible localmente
 > Primer 8000 → puerto del host
 > Segundo 8000 → puerto interno del contenedor
 >
-> **-p "127.0.0.1:9443:9443"**
+> - **-p "127.0.0.1:9443:9443"**
 > Mapea el puerto HTTPS principal de Portainer.
 > Esto permite acceder a la interfaz web mediante:
 > https://localhost:9443 o solo pueda acceder el servidor local y el reverse proxy  
 > 
-> **--name portainer**
+> - **--name portainer**
 > Asigna el nombre portainer al contenedor.
 > 
-> **--restart=always**
+> - **--restart=always**
 > Hace que el contenedor se reinicie automáticamente:
 > si falla
 > si Docker se reinicia
 > si el sistema operativo se reinicia
-> **-v /var/run/docker.sock:/var/run/docker.sock**
+> - **-v /var/run/docker.sock:/var/run/docker.sock**
 > Monta el socket de Docker dentro del contenedor.
 > Esto permite que Portainer administre Docker del host.
 > 
-> **-v portainer_data:/data**
-> Crea y monta un volumen persistente llamado portainer_data.
+> - **-v /ruta:/data**
+> Crea y monta un volumen persistente donde lo establescas.
 > Ahí se guardan:
 > configuraciones
 > usuarios
 > contraseñas
 > datos de Portainer
 >
-> **portainer/portainer-ce:lts**
+> - **portainer/portainer-ce:lts**
 > Imagen Docker que se ejecutará:
 > portainer/portainer-ce: imagen oficial Community Edition
 > lts: versión Long Term Support
@@ -754,7 +775,7 @@ networks:
 
 ###### **Interfaz a la cual respondera DNS**
 
-Ruta: Panel izquierdo de Pi-hole → Settings → DNS → Interface settings
+**Ruta:** Panel izquierdo de Pi-hole → Settings → DNS → Interface settings
 
 Al ser un contenedor por defecto estara resolviendo solo para la red docker por ello debemos cambiar la interfaz donde respondera a la que usa el contenedor para comunicarse con el servidor
 
@@ -763,7 +784,7 @@ Al ser un contenedor por defecto estara resolviendo solo para la red docker por 
 
 ###### **Local DNS**
 
-Ruta: Panel izquierdo de Pi-hole → Settings → Local DNS Records
+**Ruta:** Panel izquierdo de Pi-hole → Settings → Local DNS Records
 
 Agregamos IP's a **`List of local DNS records`**
 
@@ -771,32 +792,638 @@ Agregamos IP's a **`List of local DNS records`**
 
 Son DNS externos a los que Pi-hole envía las consultas legítimas después de bloquear los dominios no deseados.
 
-Ruta: Panel izquierdo de Pi-hole → Settings → DNS → Upstream DNS Servers
+**Ruta:** Panel izquierdo de Pi-hole → Settings → DNS → Upstream DNS Servers
 
 Agregamos DNS's de Google u otros proveedores, en caso de usar unbound debera ser agregado como `IP#5335`
 
 ##### **Reverse proxy para Pi-hole**
 ```bash
 <VirtualHost *:443>
+  ServerName sub.dominio.com
+
+  # Proxy HTTP
+  ProxyPreserveHost On
+  ProxyPass / http://127.0.0.1:8080/
+  ProxyPassReverse / http://127.0.0.1:8080/
+
+  # WebSocket
+  RequestHeader set X-Forwarded-Proto "https"
+  RequestHeader set X-Forwarded-Ssl "on"
+
+  # PERMITIR IFRAME
+  Header always unset X-Frame-Options
+  Header always set Content-Security-Policy "frame-ancestors 'self' https://sub.dominio.com" # debe ser el dominio que accedera mediante Iframe
+
+  ProxyTimeout 300
+
+  SSLEngine on
+  SSLCertificateFile /etc/apache2/ssl/certificado.crt
+  SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+</VirtualHost>
+```
+
+#### Nextcloud
+
+##### **Instalación mediante archivo Docker compose (Stack)**
+
+```yaml
+services:
+  db:
+    image: mariadb:10.11
+    container_name: nextcloud-db
+    restart: unless-stopped
+    command:
+      - --transaction-isolation=READ-COMMITTED
+      - --binlog-format=ROW
+      - --innodb_buffer_pool_size=2G
+      - --innodb_log_file_size=256M
+      - --wait_timeout=28800
+      - --interactive_timeout=28800
+      - --max_connections=200
+    volumes:
+      - ./cloud/db:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=clave_root
+      - MYSQL_PASSWORD=clave_DB
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  cache:
+    image: redis:alpine
+    container_name: nextcloud-redis
+    restart: always
+
+  app:
+    image: nextcloud:latest
+    container_name: nextcloud-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - db
+      - cache
+    # dominios que deseas que conozca el contenedor
+    extra_hosts:
+      - "sub.dominio.com:192.168.1.100"
+      - "sub.dominio.com:192.168.1.100"
+      - "sub.dominio.com:192.168.1.100"
+      - "sub.dominio.com:192.168.1.100"
+    volumes:
+      - ./cloud/data:/var/www/html
+      - /etc/apache2/ssl/certificado.crt:/usr/local/share/ca-certificates/certificado.crt:ro
+    environment:
+      - MYSQL_PASSWORD=clave_DB
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+      - MYSQL_HOST=db
+      - REDIS_HOST=cache
+      - REDIS_HOST_PORT=6379
+      - MEMCACHE_LOCKING=\OC\Memcache\Redis
+      - MEMCACHE_LOCAL=\OC\Memcache\APCu
+      - PHP_MEMORY_LIMIT=1G
+      - PHP_UPLOAD_LIMIT=10G
+    command: /bin/sh -c "update-ca-certificates && apache2-foreground"
+
+  nats:
+    image: nats:2.10-alpine
+    container_name: nextcloud-nats
+    restart: unless-stopped
+
+  signaling:
+    image: strukturag/nextcloud-spreed-signaling:latest
+    container_name: nextcloud-signaling
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - nats
+    environment:
+      - LISTEN=0.0.0.0:8080
+      - GNATS_URL=nats://nats:4222
+      # Dominio nextcloud
+      - NC_DOMAIN=sub.dominio.com
+      - NC_SECRET=Clave
+      - SESSIONS_HASHKEY=key
+      - SESSIONS_BLOCKKEY=key
+    volumes:
+      - ./cloud/signaling/config:/config
+      - /etc/apache2/ssl/certificado.crt:/usr/local/share/ca-certificates/certificado.crt:ro
+    extra_hosts:
+      - "sub.dominio.com:192.168.1.100"
+    command: >
+      /bin/sh -c "update-ca-certificates && /entrypoint.sh"
+
+  onlyoffice:
+    image: onlyoffice/documentserver
+    container_name: nextcloud-onlyoffice
+    ports:
+      - "127.0.0.1:9981:80"
+    volumes:
+      - /etc/apache2/ssl/certificado.crt:/usr/local/share/ca-certificates/certificado.crt:ro
+    environment:
+      - JWT_ENABLED=true
+      - JWT_SECRET=clave_JWT
+      - USE_UNAUTHORIZED_STORAGE=true
+    restart: always
+    command: >
+      bash -c "update-ca-certificates"
+    extra_hosts:
+      - "sub.dominio.com:192.168.1.100"
+```
+
+##### **Reverse proxy para Nextcloud**
+```bash
+<VirtualHost *:443>
     ServerName sub.dominio.com
-
-    # Proxy HTTP
-    ProxyPreserveHost On
-    ProxyPass / http://127.0.0.1:8081/
-    ProxyPassReverse / http://127.0.0.1:8081/
-
-    # WebSocket
-    RequestHeader set X-Forwarded-Proto "https"
-    RequestHeader set X-Forwarded-Ssl "on"
-
-    # PERMITIR IFRAME
-    Header always unset X-Frame-Options
-    Header always set Content-Security-Policy "frame-ancestors 'self' https://sub.dominio.com"
-
-    ProxyTimeout 300
 
     SSLEngine on
     SSLCertificateFile /etc/apache2/ssl/certificado.crt
     SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
-    </VirtualHost>
+
+    ProxyPreserveHost On
+    AllowEncodedSlashes NoDecode
+
+    ProxyPass / http://127.0.0.1:8080/ nocanon
+    ProxyPassReverse / http://127.0.0.1:8080/
+
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Host "sub.dominio.com"
+    RequestHeader set X-Forwarded-For %{REMOTE_ADDR}s
+
+    # CSP para Iframe
+    Header unset Content-Security-Policy
+    Header always set Content-Security-Policy "script-src 'self' sub.domini.com sub.dominio.com;"
+
+    SetEnvIf Authorization "(.*)" HTTP_AUTHORIZATION=$1
+</VirtualHost>
+```
+
+##### Servicios externos e integraciones
+
+###### **Implementación de correo Gmail**
+
+- Para ello debemos seguir el [manual](https://support.google.com/accounts/answer/185833?dark=1&hl=es-419) de google y añadir una (clave de aplicación)[https://myaccount.google.com/u/1/apppasswords]
+
+- Ahora podemos acceder al correo con esta clave de aplicación y el Gmail con el que se creo la clave
+
+- Agregar los servidores
+  - imap: imap.gmail.com
+  - smtp: smtp.gmail.com
+
+- Ahora solo guardamos y se conectara
+
+###### **Implementación de notificaciones Zammad**
+
+1. Acceder al usuario zammad 
+
+2. Crear el (token)[https://soporte.server.home/#profile/token_access]
+
+3. Acceder desde nextcloud con el token
+
+###### **Implementación de Iframe**
+
+- Lo primero a tener en cuenta son los CSP, ya que estos pueden bloquear las solicitudes (Esto fue definido en los virtualhost de los servicios)
+
+1. Instalar iFrame Widget en aplicaciones de nextcloud
+
+2. Ahora tenemos dos paneles de conexiones Iframe, uno para el usuario y otro del sistema que solo puede cambiar el administrador
+
+  - Iframe widget desde panel administrador
+
+    Podemos crear una conexión agregando el dominio deseado y si es publico o de un grupo especifico
+
+  - Iframe widget desde panel usuario
+
+    Podemos crear o quitar Iframes solo para el usuario
+
+###### **Implementación de Onlyoffice**
+
+Para conectar onlyoffice como dominio necesitaremos que el contenedor conozca el dominio o el DNS
+
+###### **reverse proxy para onlyoffice**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    ProxyPreserveHost On
+    AllowEncodedSlashes NoDecode
+
+    # PROXY PRINCIPAL
+    ProxyPass / http://127.0.0.1:9981/ nocanon
+    ProxyPassReverse / http://127.0.0.1:9981/
+
+    # CABECERAS
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Host "sub.dominio.com"
+    RequestHeader set X-Forwarded-Port "443"
+    RequestHeader set X-Forwarded-Ssl "on"
+    RequestHeader add X-Forwarded-For %{REMOTE_ADDR}s
+
+    # WEBSOCKETS
+    ProxyPassMatch "^/(.*)/websocket"  ws://127.0.0.1:9981/$1/websocket
+    ProxyPass "/websocket"  ws://127.0.0.1:9981/websocket
+
+    # Mantener conexión
+    ProxyTimeout 600
+
+</VirtualHost>
+```
+
+Una vez hecho lo anterior procedemos a agregar el servidor onlyoffice
+
+**RUTA: Configuraciones de administración → ONLYOFFICE → Ajustes de servidor**
+
+- Dirección de ONLYOFFICE Docs
+  
+  [dominio establecido](#L1006)
+
+- Clave secreta
+
+  [clave establcida](#L925)
+
+- Ajustes de servidor avanzados 
+
+  - Encabezado de autenticación (dejar en blanco para utilizar el encabezado predeterminado)
+    
+    **Authorization**
+
+  - Dirección de ONLYOFFICE Docs para solicitudes internas del servidor
+    
+    **https://sub.dominio.com/**
+
+
+###### **Motor de alto rendimiento (Signaling)**
+
+Para conectar signaling como dominio necesitaremos que el contenedor conozca el dominio o el DNS
+
+###### **reverse proxy para signaling**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    ProxyPreserveHost On
+
+    RequestHeader set X-Forwarded-Proto "https"
+
+    # WebSockets global
+    RewriteEngine On
+    RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteRule /(.*) ws://127.0.0.1:8100/$1 [P,L]
+
+    # HTTP normal
+    ProxyPass / http://127.0.0.1:8100/
+    ProxyPassReverse / http://127.0.0.1:8100/
+
+    # Headers websockets
+    ProxyPassReverseCookieDomain 127.0.0.1 sub.dominio.com
+</VirtualHost>
+```
+
+Una vez hecho lo anterior procedemos a agregar el motor de alto rendimiento para nextcloud talk
+
+**RUTA: Configuraciones de administración → Talk → Motor de alto rendimiento**
+
+- Colocar el [dominio establecido](#L1042)
+
+- Colocar la [clave establecida](#L925)
+
+> [!Note]
+> Como hemos establecido el certificado en el contenedor podemos validar certificado SSL.
+
+#### Odoo
+
+##### **Instalación mediante archivo Docker compose (Stack)**
+
+```yaml
+services:
+#Definimos el servicio Web, en este caso Odoo
+  web:
+    #Indicamos que imagen de Docker Hub utilizaremos
+    image: odoo:18
+    container_name: odoo-web
+    restart: unless-stopped
+    #Indicamos que depende de "db", por lo cual debe ser procesada>
+    depends_on:
+        - db
+
+    # Port Mapping: indicamos que el puerto 8069 del contenedor se>
+    # Permitiendo acceder a Odoo mediante http://localhost:8069
+    ports:
+      - "127.0.0.1:8069:8069"
+      - "127.0.0.1:8072:8072"
+
+    # Mapeamos el directorio de los contenedores (como por ejemplo>
+    # en un directorio local (como por ejemplo en un directorio ".>
+    # situado en el lugar donde ejecutemos "Docker compose"
+    volumes:
+      - ./volumesOdoo/addons:/mnt/extra-addons
+      - ./volumesOdoo/odoo-web-data:/var/lib/odoo
+      - ./volumesOdoo/config:/etc/odoo
+    #Indicamos que el contenedor funcionara con usuario root y no >
+    user: root
+    # Definimos variables de entorno de Odoo
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=odoo
+      - DB_PASSWORD=clave
+      - DB_NAME=odoo_db
+#Definimos el servicio de la base de datos
+  db:
+    image: postgres:15
+    container_name: odoo-db
+    restart: unless-stopped
+    # Definimos variables de entorno de PostgreSQL
+    environment:
+      - POSTGRES_PASSWORD=clave
+      - POSTGRES_USER=odoo
+      - POSTGRES_DB=postgres
+    # Mapeamos el directorio del contenedor "var/lib/postgresql/da>
+    # situado en el lugar donde ejecutemos "Docker compose"
+    volumes:
+      - ./volumesOdoo/dataPostgreSQL:/var/lib/postgresql/data
+```
+
+##### **Reverse proxy para Odoo**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    ProxyPreserveHost On
+    ProxyAddHeaders On
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Ssl "on"
+
+    # Error 400)
+    RequestHeader set X-Forwarded-Host %{HTTP_HOST}e
+
+    # Tráfico de tiempo real (Websocket http)
+    ProxyPass /websocket ws://127.0.0.1:8072/websocket
+    ProxyPassReverse /websocket ws://127.0.0.1:8072/websocket
+
+    # Tráfico de Longpolling
+    ProxyPass /longpolling http://127.0.0.1
+    ProxyPassReverse /longpolling http://127.0.0.1
+
+    # Tráfico (Main)
+    ProxyPass / http://127.0.0.1:8069/
+    ProxyPassReverse / http://127.0.0.1:8069/
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/calvepriv.key
+
+    # Tiempo de espera para evitar cortes en el chat
+    ProxyTimeout 720
+</VirtualHost>
+```
+
+#### Zammad
+
+##### **Instalación mediante archivo Docker compose (Stack)**
+
+```yaml
+x-shared:
+  app: &app
+    environment: &env
+      MEMCACHE_SERVERS: memcached:11211
+      POSTGRESQL_DB: zammad
+      POSTGRESQL_HOST: postgresql
+      POSTGRESQL_USER: zammad
+      POSTGRESQL_PASS: clave
+      POSTGRESQL_PORT: 5432
+      POSTGRESQL_OPTIONS: ?pool=50
+
+      ZAMMAD_FQDN: sub.dominio.com
+      NGINX_SERVER_NAME: sub.dominio.com
+
+      REDIS_URL: redis://redis:6379
+
+      ELASTICSEARCH_ENABLED: "true"
+      ELASTICSEARCH_HOST: elasticsearch
+      ELASTICSEARCH_PORT: 9200
+
+      BACKUP_DIR: "/var/tmp/zammad"
+      BACKUP_TIME: "03:00"
+      HOLD_DAYS: "10"
+      TZ: "Europe/Madrid"
+
+    image: ghcr.io/zammad/zammad:7.0.1-0024
+    restart: always
+    volumes:
+      - ./data/backup:/var/tmp/zammad:ro
+      - ./data/storage:/opt/zammad/storage
+    depends_on:
+      - memcached
+      - postgresql
+      - redis
+
+services:
+  backup:
+    <<: *app
+    command: ["zammad-backup"]
+    container_name: zammad-backup
+    volumes:
+      - ./data/backup:/var/tmp/zammad
+      - ./data/storage:/opt/zammad/storage
+    user: 0:0
+
+  elasticsearch:
+    image: elasticsearch:8.11.0
+    container_name: zammad-elasticsearch
+    restart: always
+    volumes:
+      - ./data/elasticsearch:/usr/share/elasticsearch/data
+    user: "1000:1000"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: 'false'
+      ES_JAVA_OPTS: -Xms512m -Xmx512m
+      TZ: "Europe/Madrid"
+    mem_limit: 1g
+    cpus: 1.0
+
+  init:
+    <<: *app
+    command: ["zammad-init"]
+    container_name: zammad-init
+    depends_on:
+      - postgresql
+    restart: on-failure
+    user: 0:0
+
+  memcached:
+    image: memcached:1.6.41-alpine
+    container_name: zammad-memcached
+    command: memcached -m 256M
+    restart: always
+
+  nginx:
+    <<: *app
+    command: ["zammad-nginx"]
+    container_name: zammad-nginx
+    ports:
+      - "127.0.0.1:8080:8080"
+    depends_on:
+      - railsserver
+
+  postgresql:
+    image: postgres:17.9-alpine
+    container_name: zammad-postgresql
+    restart: always
+    environment:
+      POSTGRES_DB: zammad
+      POSTGRES_USER: zammad
+      POSTGRES_PASSWORD: clave
+      TZ: "Europe/Madrid"
+    volumes:
+      - ./data/postgresql:/var/lib/postgresql/data
+
+  railsserver:
+    <<: *app
+    command: ["zammad-railsserver"]
+    container_name: zammad-railsserver
+    networks:
+      default:
+        aliases:
+          - zammad-railsserver
+
+  redis:
+    image: redis:8.6.2-alpine
+    container_name: zammad-redis
+    restart: always
+    volumes:
+      - ./data/redis:/data
+
+  scheduler:
+    <<: *app
+    command: ["zammad-scheduler"]
+    container_name: zammad-scheduler
+
+  websocket:
+    <<: *app
+    command: ["zammad-websocket"]
+    container_name: zammad-websocket
+```
+
+##### **Reverse proxy para Zammad**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    ProxyPreserveHost On
+    ProxyRequests Off
+
+    # Cabeceras importantes
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-SSL "on"
+
+    # Proxy HTTP
+    ProxyPass / http://127.0.0.1:8080/
+    ProxyPassReverse / http://127.0.0.1:8080/
+
+    # WebSocket (Zammad usa /cable)
+    ProxyPass /cable ws://127.0.0.1:8080/cable
+    ProxyPassReverse /cable ws://127.0.0.1:8080/cable
+
+    # PERMITIR IFRAME
+    Header always unset X-Frame-Options
+    Header always set Content-Security-Policy "frame-ancestors 'self' https://sub.dominio.com" # debe ser el dominio que accedera mediante Iframe
+
+    LimitRequestBody 104857600
+    ProxyTimeout 300
+
+    # Logs
+    ErrorLog ${APACHE_LOG_DIR}/zammad_error.log
+    CustomLog ${APACHE_LOG_DIR}/zammad_access.log combined
+</VirtualHost>
+```
+
+#### Duplicati
+
+##### **Instalación mediante archivo Docker compose (Stack)**
+
+```yaml
+services:
+  duplicati:
+    image: lscr.io/linuxserver/duplicati:latest
+    container_name: duplicati
+    environment:
+      - PUID=0
+      - PGID=0
+      - TZ=Europe/Madrid
+      - DUPLICATI__WEBSERVICE_PASSWORD=clave
+      - DUPLICATI__WEBSERVICE_ALLOWED_HOSTNAMES=sub.dominio.com
+      - SETTINGS_ENCRYPTION_KEY=key
+      - UMASK=002
+      - DUPLICATI__WEBSERVICE_INTERFACE=any
+      - DUPLICATI__WEBSERVICE_EXTERNAL=true
+    volumes:
+      - ./config:/config
+      - /etc/apache2/ssl/certificado.crt:/usr/local/share/ca-certi>
+      # Destino local para las copias
+      - /ruta/backups:/backups
+      # Destino remoto o USB para las copias
+      - /mnt/backups:/backups_remoto
+      # Destinos a copiar
+      - /ruta/docker:/source/docker
+      - /etc:/source/sistema
+      - /home:/source/usuarios
+      - /var/www:/source/a2webs
+      # Destino para workbench
+      - /ruta/tmp_works:/temp_duplicati
+
+    ports:
+      - "127.0.0.1:8200:8200"
+    restart: unless-stopped
+```
+
+##### **Reverse proxy para Duplicati**
+```bash
+<VirtualHost *:443>
+    ServerName sub.dominio.com
+
+    SSLEngine on
+    SSLCertificateFile /etc/apache2/ssl/certificado.crt
+    SSLCertificateKeyFile /etc/apache2/ssl/clavepriv.key
+
+    # Soporte WebSockets
+    RewriteEngine on
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteCond %{HTTP:Connection} upgrade [NC]
+    RewriteRule ^/?(.*) "ws://127.0.0.1:8200/$1" [P,L]
+
+    ProxyPreserveHost On
+
+    # Cookies
+    ProxyPassReverseCookiePath / /
+    # Forzamos SameSite=None para que la sesión no se pierda en el>
+    Header edit Set-Cookie ^(.*)$ "$1; HttpOnly; Secure; SameSite=>
+
+    # Proxy
+    ProxyPass / http://127.0.0.1:8200/
+    ProxyPassReverse / http://127.0.0.1:8200/
+
+    # Cabeceras de confianza
+    RequestHeader set X-Forwarded-Proto "https"
+    RequestHeader set X-Forwarded-Port "443"
+    RequestHeader set X-Forwarded-Host "sub.dominio.com"
+
+    ProxyTimeout 600
+
+    ErrorLog ${APACHE_LOG_DIR}/duplicati-error.log
+    CustomLog ${APACHE_LOG_DIR}/duplicati-access.log combined
+</VirtualHost>
 ```
