@@ -962,7 +962,7 @@ services:
 
 ###### **Implementación de correo Gmail**
 
-- Para ello debemos seguir el [manual](https://support.google.com/accounts/answer/185833?dark=1&hl=es-419) de google y añadir una (clave de aplicación)[https://myaccount.google.com/u/1/apppasswords]
+- Para ello debemos seguir el [manual](https://support.google.com/accounts/answer/185833?dark=1&hl=es-419) de google y añadir una [clave de aplicación](https://myaccount.google.com/u/1/apppasswords)
 
 - Ahora podemos acceder al correo con esta clave de aplicación y el Gmail con el que se creo la clave
 
@@ -976,7 +976,7 @@ services:
 
 1. Acceder al usuario zammad 
 
-2. Crear el (token)[https://soporte.server.home/#profile/token_access]
+2. Crear el [token](https://soporte.server.home/#profile/token_access)
 
 3. Acceder desde nextcloud con el token
 
@@ -1000,7 +1000,7 @@ services:
 
 Para conectar onlyoffice como dominio necesitaremos que el contenedor conozca el dominio o el DNS
 
-###### **reverse proxy para onlyoffice**
+###### **Reverse proxy para onlyoffice**
 ```bash
 <VirtualHost *:443>
     ServerName sub.dominio.com
@@ -1039,11 +1039,11 @@ Una vez hecho lo anterior procedemos a agregar el servidor onlyoffice
 
 - Dirección de ONLYOFFICE Docs
   
-  [dominio establecido](#L1006)
+  [dominio establecido](sub.dominio.com)
 
 - Clave secreta
 
-  [clave establcida](#L925)
+  [clave establecida](clave_JWT)
 
 - Ajustes de servidor avanzados 
 
@@ -1060,7 +1060,7 @@ Una vez hecho lo anterior procedemos a agregar el servidor onlyoffice
 
 Para conectar signaling como dominio necesitaremos que el contenedor conozca el dominio o el DNS
 
-###### **reverse proxy para signaling**
+###### **Reverse proxy para signaling**
 ```bash
 <VirtualHost *:443>
     ServerName sub.dominio.com
@@ -1091,9 +1091,9 @@ Una vez hecho lo anterior procedemos a agregar el motor de alto rendimiento para
 
 **RUTA: Configuraciones de administración → Talk → Motor de alto rendimiento**
 
-- Colocar el [dominio establecido](#L1042)
+- Colocar el [dominio establecido](sub.dominio.com)
 
-- Colocar la [clave establecida](#L925)
+- Colocar la [clave establecida](Clave)
 
 > [!Note]
 > Como hemos establecido el certificado en el contenedor podemos validar certificado SSL.
